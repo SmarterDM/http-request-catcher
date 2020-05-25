@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: http-request-catcher
+spec:
+  type: ClusterIP
+  ports:
+  - name: python
+    port: 5000
+    targetPort: 5000
+  selector:
+    app: http-request-catcher
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-request-catcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-request-catcher
+  template:
+    metadata:
+      labels:
+        app: http-request-catcher
+    spec:
+      containers:
+      - image: $YOUR_IMAGE
+        name: http-request-catcher
+        imagePullPolicy: Always
+        ports:
+          - name: python
+            containerPort: 5000
+            protocol: TCP
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: http-request-catcher
+spec:
+  rules:
+  - host: $YOUR_URL
+    http:
+      paths:
+        - backend:
+            serviceName: http-request-catcher
+            servicePort: 5000
+  tls:
+  - hosts:
+    - $YOUR_URL
